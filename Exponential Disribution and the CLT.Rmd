@@ -1,0 +1,115 @@
+---
+title: "Exponential Distribution and the CLT"
+author: "Bankbintje"
+date: "24th May 2015"
+output: html_document
+---
+
+### Overview
+The Central Limit Theorem states that the mean of a sufficiently large number of iterates of iid variables will be approximately normally distributed, *regardless* of the underlying distribution. This simulation excercise runs 1000 simulations of exponential distributions to investigate this. This paper compares the theoretical average and variance with the observed/simluated values *(questions 1 and 2)* and whether the resulting distribution is approximately normal *(question 3)*.
+ 
+### Simulations
+First, set some basic variables and call needed libraries. 
+```{r, warning=FALSE, echo=FALSE }
+library(ggplot2) 
+nbr.of.samples <- 40 # set the sample size to 40
+lambda <- 0.2 # set lambda to 0.2 
+nbr.of.simulations <- 1000 # set the number of simulations to 1000
+mu <- 1/lambda # set the mean of exponential distribution to 1/lambda
+sigma <- 1/lambda # set the standard deviation also to 1/lambda
+variance <- sigma^2 # set the theoretical variance to 1/lambda^2
+simulation.mean <- NULL # Declare & initialize the simulation mean, set it to NULL
+simulation.variance <- NULL # Declare & initialize the simulations variance, set it to NULL
+set.seed(123) # To get a reproducible result, use set.seed.
+```
+
+Next, run the 1000 simulations, using lambda = 0.2, nbr.of.samples = 40 and nbr.of.simulations = 1000.
+```{r}
+for (i in 1:nbr.of.simulations) {
+        simulation.mean <- c(simulation.mean, mean(rexp(nbr.of.samples,lambda)))
+        simulation.variance <- c(simulation.variance, var(rexp(nbr.of.samples,lambda)))}
+```
+
+### Sample Mean versus Theoretical Mean
+*Question 1 - Show the sample mean and compare it to the theoretical mean of the distribution.*  
+The **theoretical mean** is calculated as: 1/lambda. In this case 1/0.2 = 5
+```{r, echo=FALSE}
+mu
+```
+The **sample mean** is calculated as the mean of the 1000 simulated means.
+```{r, echo=FALSE}
+mean(simulation.mean)
+```
+The difference between theoretical and sample mean is very small.
+```{r, echo=FALSE}
+abs(mu-mean(simulation.mean))
+```
+
+### Sample Variance versus Theoretical Variance
+*Question 2 - Show how variable the sample is (via variance) and compare it to the theoretical variance of the distribution.*  
+There appear to exist two interpretations of this question. I decided to include both as it illustrates the effect of choosing/interpreting your estimator and estimand. 
+
+**Interpretation 1**: In this scenario is the *Estimator* the mean of the 1000 simulated variances and the *Estimand* the variance of the (exponentially distributed) population.  
+
+The **theoretical variance** is calculated as: 1/lambda^2. In this case (1/0.2)^2 = 5^2 = 25
+```{r, echo=FALSE}
+1/lambda^2
+```
+The **sample variance** is calculated as the mean of the 1000 simulated variances.
+```{r, echo=FALSE}
+mean(simulation.variance)
+```
+The **difference** between theoretical and sample variance is small.
+```{r, echo=FALSE}
+abs(variance-mean(simulation.variance))
+```
+
+**Interpretation 2**: In this interpretation is the *Estimator* the variance of the 1000 simulated means. The *Estimand* is the variance of the (normally distributed) population of simulations.  
+
+The **theoretical standard deviation**  calculated as: (1/lambda)/sqrt(n). 
+```{r, echo=FALSE}
+1/lambda/(sqrt(nbr.of.samples))
+```
+The **theoretical variance**  calculated as: ((1/lambda)/sqrt(n))^2. 
+```{r, echo=FALSE}
+(1/lambda/(sqrt(nbr.of.samples)))^2
+```
+The **sample standard deviation** is taken from the simulation data. 
+```{r, echo=FALSE}
+sd(simulation.mean)
+```
+The **sample variance** is taken from the simulation data.  
+```{r, echo=FALSE}
+var(simulation.mean)
+```
+Again, the **difference** between theoretical and sample variance is very small.
+```{r, echo=FALSE}
+abs((1/lambda/(sqrt(nbr.of.samples)))^2-var(simulation.mean))
+```
+
+### Distribution
+*Question 3 - Show that the distribution is approximately normal.*  
+The following plot shows the simulated distribution (bars & black line), combined with the theoretical distribution (the green line).
+
+```{r, echo=FALSE}
+# calculate the mean of the 1000 simulated means of 40 samples
+mean.simulation.mean<-mean(simulation.mean) 
+# put the results in a data frame
+dfsm = as.data.frame(simulation.mean)
+# draw the plot using ggplot2
+ggplot (dfsm) + aes(x=dfsm$simulation.mean)+ geom_histogram(fill="grey",binwidth=.1, color="black", aes (y=..density..)) + ylab ("Density of average") + xlab("Average") + theme_minimal()  + scale_x_continuous(breaks=c(2:8)) + ggtitle("Simulated & Theoretical Distribuitions") +  geom_density(size = 1, alpha=.2, fill="#FF6666") + stat_function(fun=dnorm,args=list(mean=1/lambda, sd=(1/lambda)/sqrt(40)),color = "green", size = 3.0, alpha=.50)
+```  
+
+The distribution of simulated means approximates a normal distribution. This is more or less as the Central Limit Theorem predicted. A large sample does provide a good approximation of the population mean - regardless of the underlying distribution! 
+
+### Appendix
+
+The code used to create the plot:
+```{r, fig.show='hide'}
+# calculate the mean of the 1000 simulated means of 40 samples
+mean.simulation.mean<-mean(simulation.mean) 
+# put the results in a data frame
+dfsm = as.data.frame(simulation.mean)
+# draw the plot using ggplot2
+ggplot (dfsm) + aes(x=dfsm$simulation.mean)+ geom_histogram(fill="grey",binwidth=.1, color="black", aes (y=..density..)) + ylab ("Density of average") + xlab("Average") + theme_minimal()  + scale_x_continuous(breaks=c(2:8)) + ggtitle("Simulated & Theoretical Distribuitions") +  geom_density(size = 1, alpha=.2, fill="#FF6666") + stat_function(fun=dnorm,args=list(mean=1/lambda, sd=(1/lambda)/sqrt(40)),color = "green", size = 3.0, alpha=.50)
+```
